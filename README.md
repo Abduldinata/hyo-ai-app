@@ -5,10 +5,19 @@ Aplikasi asisten AI mobile bertema anime dengan fitur voice chat, TTS, dan UI pa
 
 ## Quick Start Commands
 
-### Start VoiceVox Server
-```powershell
-.\scripts\start_voicevox.ps1
+
+### Start Backend Trending API
+Jalankan backend trending API (Node.js) dengan:
+```sh
+npm start
 ```
+atau untuk mode development (auto-reload):
+```sh
+npm run dev
+```
+
+### Start VoiceVox Server
+Jalankan VoiceVox Engine secara manual dan terpisah dari backend. Tidak ada auto-start dari backend/API. Ikuti petunjuk resmi VoiceVox atau gunakan script di folder `scripts/` jika tersedia.
 
 ## Getting Started
 
@@ -28,15 +37,18 @@ Aplikasi asisten AI mobile bertema anime dengan fitur voice chat, TTS, dan UI pa
 ### Setup
 1. Copy `.env.example` ke `.env` (jika ada)
 2. Set `GEMINI_API_KEY` dan `TTS_SERVER_URL` di `.env`
-3. Run VoiceVox server: `.\vv`
+3. Jalankan VoiceVox Engine (manual atau via script di `scripts/`)
 4. Run app: `flutter run`
 
 ## Development
 
 ### Available Commands
-- `.\vv` - Start VoiceVox TTS server dengan health check
+- `npm start` - Menjalankan backend trending API (Node.js)
+- Jalankan VoiceVox Engine secara manual (atau gunakan script di `scripts/`)
 - `flutter run` - Run Flutter app
 - `flutter test` - Run tests
+### Catatan
+- Command `npm start` hanya untuk backend trending API, bukan untuk menjalankan aplikasi Flutter.
 ### TTS Modes
 App mendukung 4 mode TTS (bisa ganti di dropdown):
 
@@ -91,6 +103,12 @@ App mendukung **bilingual auto-detection**:
 - Palet warna pastel (Sakura Pink, Lavender, Soft Blush), font Itim, efek glassmorphism, GlowBlobs, dan UI extra rounded.
 - Konsistensi desain di semua halaman (profile, about, contact, support).
 - Struktur project lebih rapi dan maintainable.
+
+### Release APK
+Untuk versi rilis APK, silakan download melalui halaman [GitHub Releases](https://github.com/Abduldinata/hyo-ai-app/releases). Setiap versi APK diupload secara profesional melalui fitur Releases, bukan di dalam source code repo.
+
+### Changelog
+Lihat riwayat perubahan lengkap di [CHANGELOG.md](CHANGELOG.md).
 
 ### License
 MIT License © 2026 Abdul Aziz Dinata

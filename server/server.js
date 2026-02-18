@@ -527,68 +527,8 @@ app.listen(PORT, () => {
   
   // Auto-start VoiceVox only when explicitly enabled
   if (process.env.AUTO_START_VOICEVOX === '1') {
-    startVoiceVoxIfAvailable();
-  } else {
-    console.log(`\nℹ️  VoiceVox auto-start disabled. Set AUTO_START_VOICEVOX=1 to enable.`);
+    // (auto-start VoiceVox dihapus, jalankan manual jika perlu)
   }
 });
 
-// Auto-start VoiceVox Engine
-function startVoiceVoxIfAvailable() {
-  const voicevoxPath = 'C:\\Program Files\\voicevox_engine-windows-cpu-0.25.1.7z\\windows-cpu\\run.exe';
-  const fs = require('fs');
-  
-  if (!fs.existsSync(voicevoxPath)) {
-    console.log(`⚠️  VoiceVox not found at: ${voicevoxPath}`);
-    console.log(`    Install VoiceVox or update path in server.js if using different version`);
-    return;
-  }
-  
-  try {
-    console.log(`\n🎵 Starting VoiceVox Engine...`);
-    const voicevoxProcess = spawn(voicevoxPath, ['--host', '0.0.0.0', '--port', '50021'], {
-      detached: false,
-      stdio: 'ignore'
-    });
-    
-    // Give it time to start, then check health with retry
-    setTimeout(() => {
-      checkVoiceVoxHealthWithRetry(1, 5);
-    }, 5000);
-    
-    // Handle process exit
-    voicevoxProcess.on('error', (err) => {
-      console.error(`❌ Failed to start VoiceVox:`, err.message);
-    });
-    
-    voicevoxProcess.on('exit', (code) => {
-      if (code !== null && code !== 0) {
-        console.warn(`⚠️  VoiceVox exited with code ${code}`);
-      }
-    });
-    
-  } catch (error) {
-    console.error(`❌ Error starting VoiceVox:`, error.message);
-  }
-}
 
-// Check VoiceVox health with retry logic
-async function checkVoiceVoxHealthWithRetry(attempt = 1, maxAttempts = 5) {
-  try {
-    const response = await axios.get('http://localhost:50021/version', { timeout: 3000 });
-    console.log(`✅ VoiceVox is running at http://localhost:50021`);
-    console.log(`   Version: ${response.data.version || 'unknown'}\n`);
-  } catch (error) {
-    if (attempt < maxAttempts) {
-      const delaySeconds = 2 + attempt;
-      console.log(`⏳ VoiceVox still starting... (attempt ${attempt}/${maxAttempts}, retry in ${delaySeconds}s)`);
-      setTimeout(() => {
-        checkVoiceVoxHealthWithRetry(attempt + 1, maxAttempts);
-      }, delaySeconds * 1000);
-    } else {
-      console.warn(`\n⚠️  VoiceVox health check failed after ${maxAttempts} attempts`);
-      console.warn(`   It may still be loading in background`);
-      console.warn(`   Check manually at: http://localhost:50021/docs\n`);
-    }
-  }
-}
