@@ -1,0 +1,42 @@
+{
+  "context_url": "http://localhost:3000/trending?geo=ID&lang=id&limit=20",
+  "context_limit": 8,
+  "context_categories": ["social", "news"],
+  "use_hyo_response": true,
+  "context": "",
+  "schema": {
+    "status": "success|error",
+    "geo": "ID",
+    "lang": "id|en|ja",
+    "updated_at": "2026-02-18T10:00:00Z",
+    "trending": [
+      {
+        "topic": "string",
+        "category": "social|news",
+        "platform": "tiktok|twitter|newsapi|...",
+        "title": "string",
+        "url": "https://example.com",
+        "published_at": "2026-02-17T12:00:00Z",
+        "metrics": {
+          "views": 0,
+          "likes": 0,
+          "comments": 0,
+          "shares": 0,
+          "tweet_volume": 0,
+          "source_rank": 0.0,
+          "mentions_24h": 0
+        },
+        "viral_score": 0
+      }
+    ],
+    "hyo_response": {
+      "emotion": "happy|neutral|sad",
+      "text": "string"
+    }
+  },
+  "example": {
+    "status": "success",
+    "geo": "ID",
+    "lang": "id"
+  }
+}
