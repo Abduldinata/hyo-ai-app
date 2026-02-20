@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
-  static const String _appVersion = '2.1.0 (build 6)';
+  static const String _appVersion = '2.1.1';
 
   @override
   Widget build(BuildContext context) {
