@@ -3,10 +3,15 @@
 ![Banner](docs/gfx/banner.png)
 # hyo-ai-app
 ## Screenshots
-![Home](docs/screenshot/homescreen.png)
-![Sidebar](docs/screenshot/sidebar.png)
-![Settings](docs/screenshot/settings.png)
-![Edit Profile](docs/screenshot/edit%20profile.png)
+
+<p align="center">
+   <img src="docs/screenshot/homescreen.png" width="220"/>
+   <img src="docs/screenshot/sidebar.png" width="220"/>
+   <img src="docs/screenshot/settings.png" width="220"/>
+   <img src="docs/screenshot/edit_profile.png" width="220"/>
+</p>
+
+<p align="center"><b>Geser ke kanan untuk melihat screenshot berikutnya →</b></p>
 
 Aplikasi asisten AI mobile bertema anime dengan fitur voice chat, TTS, dan UI pastel modern. Dikembangkan menggunakan Flutter dengan ide, konsep, dan desain utama dari saya, serta eksekusi dan pengembangan teknis secara kolaboratif menggunakan bantuan AI coding. Mendukung multi-bahasa, ekspresi karakter, dan integrasi VoiceVox & Typecast TTS. Cocok untuk showcase portofolio, eksplorasi UI/UX, dan demonstrasi kolaborasi manusia-AI dalam pengembangan aplikasi.
 
