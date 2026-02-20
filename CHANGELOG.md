@@ -45,3 +45,7 @@
 - Perbaikan dan peningkatan animasi tombol mic (MicButton).
 - UI lebih smooth dan responsif saat menekan/menahan mic.
 - Build: hyo-ai-2.1.1-micfix.apk
+
+## v2.1.1+1 – 20 Februari 2026
+- Update new icon and changelog
+- Build: hyo-ai-v2.1.1+1.apk
