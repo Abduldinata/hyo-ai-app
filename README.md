@@ -1,7 +1,7 @@
 
-
-![Banner](docs/gfx/banner.png)
 # hyo-ai-app
+![Banner](docs/gfx/banner.png)
+
 ## Screenshots
 ![Home](docs/screenshot/homescreen.png)
 ![Sidebar](docs/screenshot/sidebar.png)
