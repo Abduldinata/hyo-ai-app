@@ -1,5 +1,56 @@
 # Changelog hyo_ai
 
+## v2.2.0 (Localization) – 23 Februari 2026
+### Fitur Localization & Multi-Bahasa
+- **Localization Service**: Singleton service untuk mengelola bahasa aplikasi
+  - Support: English (en) dan Indonesian (id)
+  - Auto-detection dari device system locale
+  - User override dengan penyimpanan preferensi di SharedPreferences
+  
+- **Translation Map**: 65+ string translations
+  - Status messages, UI labels, error messages, TTS modes
+  - Dukungan full untuk English dan Indonesian
+  
+- **Settings Page Enhancement**:
+  - Language selector dengan 3 opsi: Auto, English, Indonesian
+  - Radio button UI untuk pemilihan bahasa
+  - Real-time UI updates ketika bahasa diubah
+  
+### Perbaikan Error Kompilasi
+- Dihapus dynamic string interpolation (`${seconds}`) dari const map
+- Fixed SharedPreferences import dan usage
+- Semua translation values sekarang const-safe
+  
+### Technical Details
+- File baru: `lib/localization/translations.dart`, `lib/localization/localization_service.dart`
+- Package baru: `shared_preferences: ^2.2.3`
+- Version bumped: 2.1.2 → 2.2.0
+- Build: Siap untuk build APK
+
+### Coverage Status
+- ✅ Status messages (15+ strings)
+- ✅ Settings page (fully localized)
+- ⏳ Remaining UI elements (Drawer, Dialogs, Pages - coming soon)
+
+## v2.1.1+1 – 20 Februari 2026
+- Update new icon and changelog
+- Build: hyo-ai-v2.1.1+1.apk
+
+## v2.1.1 (micfix) – 20 Februari 2026
+- Perbaikan dan peningkatan animasi tombol mic (MicButton).
+- UI lebih smooth dan responsif saat menekan/menahan mic.
+- Build: hyo-ai-2.1.1-micfix.apk
+
+## v2.1.0 (build 6) – 18 Februari 2026
+- hyo-ai 2.1.0 (build 6).apk: Build stabil, siap rilis portofolio. Semua fitur utama, UI, dan keamanan sudah optimal.
+
+## v2.0.0 – 18 Februari 2026
+### Build 2.0.1+3, 2.0.2+4, 2.0.3+5
+- hyo-ai 2.0.1+3.apk, 2.0.2+4.apk, 2.0.3+5.apk: Iterasi pengembangan fitur baru, perbaikan bug, dan penyesuaian UI.
+
+## v1.2.0 – 17 Februari 2026
+- hyo-ai 1.2.0.apk: Penambahan fitur minor, perbaikan UI, dan peningkatan stabilitas. 
+
 ## v1.0.0 – 16 Februari 2026
 - Struktur awal aplikasi Flutter: main.dart, halaman utama, profile, about, contact, support.
 - UI sederhana, warna default Flutter, font standar.
@@ -8,13 +59,6 @@
 ### Build & Fix (16 Februari 2026)
 - hyo-ai.apk: Build awal.
 - hyo-ai-fix.apk, hyo-ai-fix-2.apk: Perbaikan bug minor, typo, dan error kompilasi.
-
-## v1.2.0 – 17 Februari 2026
-- hyo-ai 1.2.0.apk: Penambahan fitur minor, perbaikan UI, dan peningkatan stabilitas.
-
-## v2.0.0 – 18 Februari 2026
-### Build 2.0.1+3, 2.0.2+4, 2.0.3+5
-- hyo-ai 2.0.1+3.apk, 2.0.2+4.apk, 2.0.3+5.apk: Iterasi pengembangan fitur baru, perbaikan bug, dan penyesuaian UI.
 
 ### Transformasi Estetika & UI
 - Palet warna pastel: Sakura Pink (#FFB7C5), Lavender (#E0BBE4), Soft Blush (#FFF5F7).
@@ -37,15 +81,3 @@
 - server.js dipindah ke folder server/.
 - scripts/ dibuat untuk otomatisasi (misal: start_voicevox.ps1).
 - .env dan file sensitif diamankan, .gitignore diupdate agar tidak ikut push.
-
-## v2.1.0 (build 6) – 18 Februari 2026
-- hyo-ai 2.1.0 (build 6).apk: Build stabil, siap rilis portofolio. Semua fitur utama, UI, dan keamanan sudah optimal.
-
-## v2.1.1 (micfix) – 20 Februari 2026
-- Perbaikan dan peningkatan animasi tombol mic (MicButton).
-- UI lebih smooth dan responsif saat menekan/menahan mic.
-- Build: hyo-ai-2.1.1-micfix.apk
-
-## v2.1.1+1 – 20 Februari 2026
-- Update new icon and changelog
-- Build: hyo-ai-v2.1.1+1.apk
