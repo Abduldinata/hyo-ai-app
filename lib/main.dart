@@ -16,6 +16,7 @@
   import 'package:speech_to_text/speech_recognition_error.dart';
   import 'package:speech_to_text/speech_recognition_result.dart';
   import 'data/memory_store.dart';
+  import 'localization/localization_service.dart';
   import 'pages/about_page.dart';
   import 'pages/contact_page.dart';
   import 'pages/profile_page.dart';
@@ -50,6 +51,7 @@ Future<void> main() async {
   try {
     await dotenv.load(fileName: '.env');
   } catch (_) {}
+  await LocalizationService.instance.init();
   runApp(const HyoAiApp());
 }
 
@@ -58,6 +60,10 @@ class HyoAiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Set system locale to localization service
+    final locale = Localizations.localeOf(context);
+    LocalizationService.instance.setSystemLocale(locale);
+    
     final baseTheme = ThemeData(
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFFFFB7C5),
@@ -71,7 +77,7 @@ class HyoAiApp extends StatelessWidget {
       scaffoldBackgroundColor: const Color(0xFFFFF5F7),
     );
     return MaterialApp(
-      title: 'Hyo AI',
+      title: t('app_title'),
       debugShowCheckedModeBanner: false,
       theme: baseTheme.copyWith(
         textTheme: GoogleFonts.itimTextTheme(baseTheme.textTheme)
@@ -227,6 +233,7 @@ class _HomePageState extends State<HomePage> {
         ? dotenv.env['GEMINI_MODEL']!.trim()
         : _defaultModelName;
     _contextUrl = dotenv.env['CONTEXT_URL']?.trim();
+    debugPrint('📰 Loaded CONTEXT_URL from .env: ${_contextUrl ?? "(null)"}');
     final speakerEnv = dotenv.env['VOICEVOX_SPEAKER_ID']?.trim();
     if (speakerEnv != null && speakerEnv.isNotEmpty) {
       _voicevoxSpeakerId = int.tryParse(speakerEnv) ?? _voicevoxSpeakerId;
@@ -240,6 +247,7 @@ class _HomePageState extends State<HomePage> {
     _loadSessions();
     _loadProfile();
     _loadTtsMode();
+    _loadVoicevoxServerUrl();
   }
 
   Future<void> _loadPromptConfig() async {
@@ -330,25 +338,44 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _ensureExternalContext() async {
     final url = _contextUrl;
+    debugPrint('📰 _ensureExternalContext called');
+    debugPrint('📰 CONTEXT_URL: ${url ?? "(null)"}');
+    
     if (url == null || url.isEmpty) {
+      debugPrint('📰 ❌ No CONTEXT_URL configured, skipping external context');
       return;
     }
+    
     final lastFetched = _externalContextFetchedAt;
     if (lastFetched != null &&
         DateTime.now().difference(lastFetched) < _contextRefresh) {
+      debugPrint('📰 ⏭️ Context still fresh (fetched ${DateTime.now().difference(lastFetched).inSeconds}s ago)');
       return;
     }
+    
     try {
+      debugPrint('📰 Fetching context from: $url');
       final response = await http
           .get(Uri.parse(url))
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 10));
+      
+      debugPrint('📰 Response status: ${response.statusCode}');
+      
       if (response.statusCode != 200) {
+        debugPrint('📰 ❌ Failed to fetch context: HTTP ${response.statusCode}');
         return;
       }
+      
       final payload = _parseContextPayload(response.body);
+      
       if (payload.contextText == null || payload.contextText!.trim().isEmpty) {
+        debugPrint('📰 ❌ Context text is empty');
         return;
       }
+      
+      debugPrint('📰 ✅ Context fetched: ${payload.contextText!.length} chars');
+      debugPrint('📰 Hyo response available: ${payload.hyoText != null}');
+      
       if (!mounted) {
         return;
       }
@@ -356,6 +383,7 @@ class _HomePageState extends State<HomePage> {
         _externalContext = payload.contextText!.trim();
         if (payload.hyoText != null && payload.hyoText!.trim().isNotEmpty) {
           _hyoResponseText = payload.hyoText!.trim();
+          debugPrint('📰 Hyo response set: "${_hyoResponseText?.substring(0, 50)}..."');
         }
         if (payload.hyoEmotion != null &&
             payload.hyoEmotion!.trim().isNotEmpty) {
@@ -363,7 +391,9 @@ class _HomePageState extends State<HomePage> {
         }
         _externalContextFetchedAt = DateTime.now();
       });
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('📰 ❌ Error fetching context: $e');
+    }
   }
 
   _ContextPayload _parseContextPayload(String body) {
@@ -569,11 +599,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   String? _maybeUseHyoResponse(String text) {
+    debugPrint('📰 _maybeUseHyoResponse called with text: "$text"');
+    debugPrint('📰 _useHyoResponse: $_useHyoResponse');
+    debugPrint('📰 _hyoResponseText available: ${_hyoResponseText != null && _hyoResponseText!.isNotEmpty}');
+    
     if (!_useHyoResponse) {
+      debugPrint('📰 ⏭️ Hyo response disabled in config');
       return null;
     }
     final hyoText = _hyoResponseText;
     if (hyoText == null || hyoText.isEmpty) {
+      debugPrint('📰 ❌ No Hyo response text available');
       return null;
     }
     final lower = text.toLowerCase();
@@ -590,9 +626,14 @@ class _HomePageState extends State<HomePage> {
       'lagi rame',
     ];
     final hit = triggers.any(lower.contains);
+    debugPrint('📰 Trigger words detected: $hit');
+    
     if (!hit) {
+      debugPrint('📰 ⏭️ No trigger words found in user message');
       return null;
     }
+    
+    debugPrint('📰 ✅ Using Hyo response for trending/news question');
     _lastHyoResponseEmotion = _hyoResponseEmotion;
     return hyoText;
   }
@@ -656,6 +697,22 @@ class _HomePageState extends State<HomePage> {
       _profileBio = profile['bio'] ?? '';
       _profileAvatarBase64 = profile['avatar_base64'];
     });
+  }
+
+  Future<void> _loadVoicevoxServerUrl() async {
+    try {
+      final prefs = await _memoryStore.getPreferences();
+      final savedUrl = prefs['voicevox_server_url'];
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        // Override .env value if user has set custom URL in Settings
+        if (savedUrl != null && savedUrl.isNotEmpty) {
+          _ttsServerUrl = savedUrl.trim();
+        }
+      });
+    } catch (_) {}
   }
 
   Future<void> _openProfile() async {
@@ -732,7 +789,7 @@ class _HomePageState extends State<HomePage> {
       _sessions = sessions;
       _messages.clear();
       _currentSessionMessageCount = 0;
-      _statusText = 'Chat baru dimulai.';
+      _statusText = t('new_chat_started');
     });
   }
 
@@ -819,6 +876,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _initSpeech() async {
+    debugPrint('🎤 Initializing speech...');
     final available = await _speech.initialize(
       onStatus: _onSpeechStatus,
       onError: _onSpeechError,
@@ -827,13 +885,14 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     final hasPermission = await _speech.hasPermission;
+    debugPrint('🎤 Speech available: $available, hasPermission: $hasPermission');
     setState(() {
       _speechReady = available;
       _statusText = available
           ? (hasPermission
-              ? 'Tekan mic untuk mulai.'
-              : 'Mic belum diizinkan di perangkat.')
-          : 'Speech belum siap di perangkat ini.';
+              ? t('press_mic')
+              : t('mic_not_allowed'))
+          : t('speech_not_ready');
     });
   }
 
@@ -902,6 +961,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onSpeechStatus(String status) {
+    debugPrint('🎤 Speech status: $status');
     if (status == 'done' || status == 'notListening') {
       if (_isListening) {
         _stopListening(send: true);
@@ -910,73 +970,157 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onSpeechError(SpeechRecognitionError error) {
+    debugPrint('🎤 ❌ Speech error: ${error.errorMsg} (permanent: ${error.permanent})');
     if (!mounted) {
       return;
     }
     setState(() {
       _isListening = false;
-      _statusText = 'Error mic: ${error.errorMsg}';
+      _statusText = '${t('mic_error')} ${error.errorMsg}';
       _expression = Expression.idle;
     });
   }
 
   Future<String> _resolveLocale() async {
     final locales = await _speech.locales();
-    final match = locales.where((locale) => locale.localeId == _defaultLocale);
-    if (match.isNotEmpty) {
-      return match.first.localeId;
+    debugPrint('🎤 Available locales: ${locales.length}');
+    for (final locale in locales) {
+      debugPrint('  - ${locale.localeId}: ${locale.name}');
     }
-    return locales.isNotEmpty ? locales.first.localeId : _defaultLocale;
+    
+    // Get device locale dinamically
+    final deviceLocale = WidgetsBinding.instance.window.locale;
+    final deviceLocaleId = '${deviceLocale.languageCode}-${deviceLocale.countryCode ?? deviceLocale.languageCode.toUpperCase()}';
+    debugPrint('🎤 Device locale: $deviceLocaleId');
+    
+    // 1. Try exact match dengan device locale
+    final exactMatch = locales.where((locale) => locale.localeId == deviceLocaleId);
+    if (exactMatch.isNotEmpty) {
+      debugPrint('🎤 Using exact device locale: ${exactMatch.first.localeId}');
+      return exactMatch.first.localeId;
+    }
+    
+    // 2. Try match by language code saja (e.g., 'id-ID' jika device 'id')
+    final langCode = deviceLocale.languageCode.toLowerCase();
+    final langMatch = locales.where((locale) => 
+      locale.localeId.toLowerCase().startsWith('$langCode-')
+    );
+    if (langMatch.isNotEmpty) {
+      debugPrint('🎤 Using language match: ${langMatch.first.localeId}');
+      return langMatch.first.localeId;
+    }
+    
+    // 3. Fallback ke default locale jika ada
+    final defaultMatch = locales.where((locale) => locale.localeId == _defaultLocale);
+    if (defaultMatch.isNotEmpty) {
+      debugPrint('🎤 Using default locale: ${defaultMatch.first.localeId}');
+      return defaultMatch.first.localeId;
+    }
+    
+    // 4. Last resort: gunakan locale pertama yang available
+    final fallback = locales.isNotEmpty ? locales.first.localeId : _defaultLocale;
+    debugPrint('🎤 Using fallback locale: $fallback');
+    return fallback;
   }
 
   Future<void> _startListening() async {
+    debugPrint('🎤 _startListening called, _isListening: $_isListening');
     if (_isListening) {
       return;
     }
+    setState(() {
+      _isListening = true;
+      _statusText = t('starting_mic');
+    });
+
     if (!_speechReady) {
-      setState(() {
-        _statusText = 'Mic belum siap. Cek izin mikrofon.';
-      });
+      debugPrint('🎤 Speech not ready, initializing...');
       await _initSpeech();
       if (!_speechReady) {
+        debugPrint('🎤 ❌ Speech still not ready after init');
+        if (mounted) setState(() => _isListening = false);
+        return;
+      }
+    }
+    final hasPermission = await _speech.hasPermission;
+    debugPrint('🎤 Permission check: $hasPermission');
+    if (!hasPermission) {
+      setState(() {
+        _statusText = t('mic_not_allowed');
+      });
+      await _initSpeech();
+      if (!await _speech.hasPermission) {
+        debugPrint('🎤 ❌ Permission denied');
+        if (mounted) setState(() => _isListening = false);
         return;
       }
     }
     final localeId = await _resolveLocale();
+    debugPrint('🎤 Using locale: $localeId');
+    
+    if (!mounted || !_isListening) {
+      debugPrint('🎤 ⚠️ Cancelled before listen started');
+      return; // User already cancelled before initialization finished
+    }
+
     setState(() {
-      _isListening = true;
       _partialText = '';
       _soundLevel = 0;
-      _statusText = 'Mendengarkan...';
+      _statusText = t('listening');
       _expression = Expression.idle;
       _speechSent = false;
     });
-    await _speech.listen(
-      localeId: localeId,
-      onResult: _onSpeechResult,
-      onSoundLevelChange: (level) {
-        if (!mounted) {
-          return;
-        }
+    
+    try {
+      debugPrint('🎤 Starting speech.listen()...');
+      await _speech.listen(
+        localeId: localeId,
+        onResult: _onSpeechResult,
+        onSoundLevelChange: (level) {
+          if (!mounted) {
+            return;
+          }
+          debugPrint('🎤 Sound level: $level');
+          setState(() {
+            _soundLevel = level;
+          });
+        },
+        listenFor: const Duration(seconds: 30),
+        pauseFor: const Duration(seconds: 3),
+        partialResults: true,
+      );
+      debugPrint('🎤 ✅ Speech.listen() started successfully');
+    } catch (e) {
+      debugPrint('🎤 ❌ Exception starting listen: $e');
+      if (mounted) {
         setState(() {
-          _soundLevel = level;
+          _isListening = false;
+          _statusText = 'Mic gagal memulai: $e';
         });
-      },
-      listenFor: const Duration(seconds: 30),
-      pauseFor: const Duration(seconds: 2),
-      partialResults: true,
-    );
+      }
+    }
   }
 
   Future<void> _stopListening({bool send = false}) async {
-    await _speech.stop();
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
     setState(() {
       _isListening = false;
-      _statusText = 'Siap mendengarkan.';
+      _statusText = t('processing');
     });
+    
+    await _speech.stop();
+    
+    if (!mounted) return;
+    
+    // Beri sedikit jeda agar callback onResult terakhir (finalResult: true) 
+    // dari native engine sempat dikirimkan sebelum kita cek _partialText.
+    await Future.delayed(const Duration(milliseconds: 350));
+    
+    if (!mounted) return;
+    setState(() {
+      _statusText = t('ready');
+    });
+
     if (send && _speechSent) {
       return;
     }
@@ -987,12 +1131,13 @@ class _HomePageState extends State<HomePage> {
       await _handleUserText(text);
     } else if (send) {
       setState(() {
-        _statusText = 'Tidak ada suara terdeteksi.';
+        _statusText = t('no_sound');
       });
     }
   }
 
   void _onSpeechResult(SpeechRecognitionResult result) {
+    debugPrint('🎤 Result: "${result.recognizedWords}" (final: ${result.finalResult}, confidence: ${result.confidence})');
     if (!mounted) {
       return;
     }
@@ -1028,6 +1173,17 @@ class _HomePageState extends State<HomePage> {
       await _refreshSessions();
     } catch (_) {}
     _currentSessionMessageCount += 1;
+    // Scroll to bottom immediately
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+
     // Auto-title hanya di message pertama agar tidak override manual rename
     if (_currentSessionMessageCount == 1) {
       final normalized = text.replaceAll(RegExp(r'\s+'), ' ').trim();
@@ -1044,7 +1200,7 @@ class _HomePageState extends State<HomePage> {
     } catch (_) {}
     setState(() {
       _isThinking = true;
-      _statusText = 'Hyo sedang berpikir...';
+      _statusText = t('hyo_thinking');
     });
     String reply;
     try {
@@ -1057,7 +1213,7 @@ class _HomePageState extends State<HomePage> {
     }
     setState(() {
       _isThinking = false;
-      _statusText = 'Siap mendengarkan.';
+      _statusText = t('ready');
       final emotion = _lastHyoResponseEmotion;
       if (emotion != null && emotion.isNotEmpty) {
         _expression = _mapEmotionToExpression(emotion);
@@ -1101,11 +1257,18 @@ class _HomePageState extends State<HomePage> {
       return displayText;
     }
     if (_ttsTextMode == 'original') {
+      debugPrint('🎤 TTS mode: original (using display text as-is)');
       return displayText;
     }
     final romanize = _ttsTextMode == 'romaji';
+    debugPrint('🎤 TTS mode: ${_ttsTextMode}, translating to Japanese...');
     final translated = await _translateText(reply, 'ja', romanize: romanize);
-    return translated ?? displayText;
+    if (translated == null || translated.isEmpty) {
+      debugPrint('🎤 Translation failed, fallback to display text');
+      return displayText;
+    }
+    debugPrint('🎤 Translated: "$displayText" → "$translated"');
+    return translated;
   }
 
   Future<String?> _translateText(
@@ -1120,6 +1283,7 @@ class _HomePageState extends State<HomePage> {
     final cacheKey = '${target}|${romanize ? 'rm' : 't'}|$trimmed';
     final cached = _translationCache[cacheKey];
     if (cached != null && cached.isNotEmpty) {
+      debugPrint('🌐 Translation cache hit for: $target${romanize ? ' (romaji)' : ''}');
       return cached;
     }
 
@@ -1132,14 +1296,17 @@ class _HomePageState extends State<HomePage> {
     };
     final uri = Uri.https('translate.googleapis.com', '/translate_a/single', queryParams);
     try {
+      debugPrint('🌐 Translating to $target${romanize ? ' (romaji)' : ''}...');
       final response = await http
           .get(uri)
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) {
+        debugPrint('🌐 Translation failed: HTTP ${response.statusCode}');
         return null;
       }
       final decoded = jsonDecode(response.body);
       if (decoded is! List || decoded.isEmpty || decoded[0] is! List) {
+        debugPrint('🌐 Translation failed: Invalid response format');
         return null;
       }
       final segments = decoded[0] as List;
@@ -1165,11 +1332,14 @@ class _HomePageState extends State<HomePage> {
           ? romanizedText
           : translatedText;
       if (result.isEmpty) {
+        debugPrint('🌐 Translation result empty');
         return null;
       }
       _translationCache[cacheKey] = result;
+      debugPrint('🌐 Translation success: "$trimmed" → "$result"');
       return result;
-    } catch (_) {
+    } catch (e) {
+      debugPrint('🌐 Translation error: $e');
       return null;
     }
   }
@@ -1466,11 +1636,12 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      // Step 1: Get audio query (dikurangi timeout untuk lebih responsif)
+      // Step 1: Get audio query (timeout 15s untuk text panjang)
       final queryResponse = await http
           .post(queryUri)
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 15));
       if (queryResponse.statusCode != 200) {
+        debugPrint('🎤 VoiceVox audio_query error: ${queryResponse.statusCode}');
         await _tts.stop();
         await _tts.speak(text);
         return;
@@ -1480,15 +1651,16 @@ class _HomePageState extends State<HomePage> {
       final queryJson = jsonDecode(queryResponse.body) as Map<String, dynamic>;
       queryJson['speedScale'] = 1.1; // Sedikit lebih cepat (1.0 = normal, max 2.0)
       
-      // Step 3: Synthesize audio
+      // Step 3: Synthesize audio (timeout 30s untuk render)
       final synthResponse = await http
           .post(
             synthUri,
             headers: const {'Content-Type': 'application/json'},
             body: jsonEncode(queryJson),
           )
-          .timeout(const Duration(seconds: 15));
+          .timeout(const Duration(seconds: 30));
       if (synthResponse.statusCode != 200) {
+        debugPrint('🎤 VoiceVox synthesis error: ${synthResponse.statusCode}');
         await _tts.stop();
         await _tts.speak(text);
         return;
@@ -1496,11 +1668,13 @@ class _HomePageState extends State<HomePage> {
 
       final audioBytes = synthResponse.bodyBytes;
       if (audioBytes.isEmpty) {
+        debugPrint('🎤 VoiceVox audio empty');
         await _tts.stop();
         await _tts.speak(text);
         return;
       }
       
+      debugPrint('🎤 VoiceVox synthesis OK: ${audioBytes.length} bytes');
       // Play audio immediately setelah download
       await _audioPlayer.stop();
       if (kIsWeb) {
@@ -1509,7 +1683,8 @@ class _HomePageState extends State<HomePage> {
       } else {
         await _audioPlayer.play(BytesSource(audioBytes));
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('🎤 VoiceVox error: $e (fallback to system TTS)');
       await _tts.stop();
       await _tts.speak(text);
     }
@@ -1793,12 +1968,22 @@ class _HomePageState extends State<HomePage> {
                               .textTheme
                               .headlineMedium
                               ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFFF35D9C),
+                                fontWeight: FontWeight.w900,
+                                fontSize: 26,
+                                letterSpacing: 0.5,
+                                foreground: Paint()
+                                  ..shader = const LinearGradient(
+                                    colors: [
+                                      Color(0xFFF35D9C),
+                                      Color(0xFFFFB7C5),
+                                    ],
+                                  ).createShader(
+                                    const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
+                                  ),
                               ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Flexible(child: StatusPill(text: _statusText)),
                       const SizedBox(width: 10),
                       Tooltip(
@@ -1849,8 +2034,17 @@ class _HomePageState extends State<HomePage> {
                         child: ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: _messages.length,
+                          itemCount: _messages.length + (_isThinking ? 1 : 0),
                           itemBuilder: (context, index) {
+                            if (index == _messages.length) {
+                              // Tampilkan indikator thinking
+                              return ChatBubble(
+                                text: '',
+                                fromUser: false,
+                                timestamp: DateTime.now(),
+                                isLoading: true,
+                              );
+                            }
                             final message = _messages[index];
                             // Check if we need to show a date separator
                             bool showDateSeparator = false;
@@ -2027,6 +2221,7 @@ class _HomePageState extends State<HomePage> {
                                 textInputAction: TextInputAction.newline,
                                 minLines: 2,
                                 maxLines: 4,
+                                enabled: !_isThinking,
                                 decoration: const InputDecoration(
                                   hintText: 'Tulis pertanyaanmu...',
                                   border: InputBorder.none,
@@ -2034,16 +2229,30 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            MicButton(
-                              isActive: _isListening,
-                              onTap: _isListening
-                                  ? _stopListening
-                                  : _startListening,
-                              onPressStart: _startListening,
-                              onPressEnd: () => _stopListening(send: true),
+                            Opacity(
+                              opacity: _isThinking ? 0.5 : 1.0,
+                              child: IgnorePointer(
+                                ignoring: _isThinking,
+                                child: MicButton(
+                                  isActive: _isListening,
+                                  onTap: () {
+                                    if (_isListening) {
+                                      _stopListening(send: true);
+                                    } else {
+                                      _startListening();
+                                    }
+                                  },
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 8),
-                            SendButton(onTap: _sendTypedMessage),
+                            Opacity(
+                              opacity: _isThinking ? 0.5 : 1.0,
+                              child: IgnorePointer(
+                                ignoring: _isThinking,
+                                child: SendButton(onTap: _sendTypedMessage),
+                              ),
+                            ),
                           ],
                         ),
                       ],
