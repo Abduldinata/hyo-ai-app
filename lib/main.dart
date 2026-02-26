@@ -9,7 +9,6 @@
   import 'package:flutter/services.dart';
   import 'package:flutter_dotenv/flutter_dotenv.dart';
   import 'package:flutter_tts/flutter_tts.dart';
-  import 'package:google_fonts/google_fonts.dart';
   import 'package:google_generative_ai/google_generative_ai.dart';
   import 'package:http/http.dart' as http;
   import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -17,6 +16,7 @@
   import 'package:speech_to_text/speech_recognition_result.dart';
   import 'data/memory_store.dart';
   import 'localization/localization_service.dart';
+  import 'services/theme_service.dart';
   import 'pages/about_page.dart';
   import 'pages/contact_page.dart';
   import 'pages/profile_page.dart';
@@ -52,38 +52,45 @@ Future<void> main() async {
     await dotenv.load(fileName: '.env');
   } catch (_) {}
   await LocalizationService.instance.init();
+  await ThemeService().init();
   runApp(const HyoAiApp());
 }
 
-class HyoAiApp extends StatelessWidget {
+class HyoAiApp extends StatefulWidget {
   const HyoAiApp({super.key});
 
   @override
+  State<HyoAiApp> createState() => _HyoAiAppState();
+}
+
+class _HyoAiAppState extends State<HyoAiApp> {
+  late ThemeService _themeService;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeService = ThemeService();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Set system locale to localization service
-    final locale = Localizations.localeOf(context);
-    LocalizationService.instance.setSystemLocale(locale);
-    
-    final baseTheme = ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFFFB7C5),
-        primary: const Color(0xFFFFB7C5),
-        secondary: const Color(0xFFE0BBE4),
-        surface: const Color(0xFFFFF5F7),
-        onSurface: const Color(0xFF4A4A4A),
-        brightness: Brightness.light,
-      ),
-      useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFFFF5F7),
-    );
-    return MaterialApp(
-      title: t('app_title'),
-      debugShowCheckedModeBanner: false,
-      theme: baseTheme.copyWith(
-        textTheme: GoogleFonts.itimTextTheme(baseTheme.textTheme)
-            .apply(bodyColor: const Color(0xFF4A4A4A)),
-      ),
-      home: const HomePage(),
+    return ValueListenableBuilder<AppThemeMode>(
+      valueListenable: _themeService.themeNotifier,
+      builder: (context, theme, _) {
+        final currentTheme = ThemeService.getTheme(theme);
+        return MaterialApp(
+          title: t('app_title'),
+          debugShowCheckedModeBanner: false,
+          theme: currentTheme.toMaterialTheme(),
+          home: Builder(
+            builder: (context) {
+              final locale = Localizations.localeOf(context);
+              LocalizationService.instance.setSystemLocale(locale);
+              return const HomePage();
+            },
+          ),
+        );
+      },
     );
   }
 }
@@ -176,7 +183,7 @@ class _HomePageState extends State<HomePage> {
   bool _isListening = false;
   bool _isThinking = false;
   String _partialText = '';
-  String _statusText = 'Siap mendengarkan.';
+  String _statusText = '';
   double _soundLevel = 0;
   Expression _expression = Expression.idle;
   bool _speechSent = false;
@@ -220,9 +227,22 @@ class _HomePageState extends State<HomePage> {
         '${two(value.hour)}:${two(value.minute)}:${two(value.second)}';
   }
 
+  String _resolveSessionTitle(String? title) {
+    final value = (title ?? '').trim();
+    if (value.isEmpty) {
+      return t('new_chat');
+    }
+    final lower = value.toLowerCase();
+    if (lower == 'chat baru' || lower == 'new chat') {
+      return t('new_chat');
+    }
+    return value;
+  }
+
   @override
   void initState() {
     super.initState();
+    _statusText = t('ready');
     _ttsServerUrl = dotenv.env['TTS_SERVER_URL']?.trim();
     _typecastApiKey = dotenv.env['TYPECAST_API_KEY']?.trim();
     _typecastVoiceId = dotenv.env['TYPECAST_VOICE_ID']?.trim();
@@ -730,7 +750,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     if (sessions.isEmpty) {
-      final newId = await _memoryStore.createSession();
+      final newId = await _memoryStore.createSession(title: t('new_chat'));
       _sessions = await _memoryStore.getSessions(limit: 50);
       _currentSessionId = newId;
       await _loadSessionMessages(newId);
@@ -779,7 +799,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _startNewChat() async {
-    final newId = await _memoryStore.createSession();
+    final newId = await _memoryStore.createSession(title: t('new_chat'));
     if (!mounted) {
       return;
     }
@@ -809,22 +829,22 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Rename chat'),
+          title: Text(t('rename_chat')),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(
-              hintText: 'Chat title',
+            decoration: InputDecoration(
+              hintText: t('chat_title'),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(t('cancel')),
             ),
             ElevatedButton(
               onPressed: () =>
                   Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('Save'),
+              child: Text(t('save')),
             ),
           ],
         );
@@ -1095,7 +1115,7 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         setState(() {
           _isListening = false;
-          _statusText = 'Mic gagal memulai: $e';
+          _statusText = '${t('listen_failed')} $e';
         });
       }
     }
@@ -1152,12 +1172,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleUserText(String text) async {
     if (_isThinking) {
       setState(() {
-        _statusText = 'Tunggu sebentar, Hyo masih menjawab.';
+        _statusText = t('wait_hyo');
       });
       return;
     }
     if (_currentSessionId == null) {
-      final newId = await _memoryStore.createSession();
+      final newId = await _memoryStore.createSession(title: t('new_chat'));
       _currentSessionId = newId;
       _sessions = await _memoryStore.getSessions(limit: 50);
     }
@@ -1757,6 +1777,13 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isCompact = size.width < 420;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final primaryColor = colorScheme.primary;
+    final secondaryColor = colorScheme.secondary;
+    final tertiaryColor = colorScheme.tertiary;
+    final surfaceColor = colorScheme.surface;
+    final backgroundColor = colorScheme.background;
     final userAvatarProvider = _profileAvatarBase64 == null ||
             _profileAvatarBase64!.isEmpty
         ? null
@@ -1764,14 +1791,14 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       drawer: Drawer(
-        backgroundColor: const Color(0xFFFFF4F7),
+        backgroundColor: backgroundColor,
         child: SafeArea(
           child: DecoratedBox(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFFFFF4F7),
-                  Color(0xFFFCE1E8),
+                  backgroundColor,
+                  surfaceColor.withOpacity(0.7),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -1783,17 +1810,17 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.all(16),
                       child: Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Chat History',
-                              style: TextStyle(
+                              t('chat_history'),
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                           IconButton(
-                            tooltip: 'New chat',
+                            tooltip: t('new_chat'),
                             onPressed: () {
                               Navigator.of(context).pop();
                               _startNewChat();
@@ -1805,14 +1832,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                     Expanded(
                       child: _sessions.isEmpty
-                          ? const Center(child: Text('Belum ada chat'))
+                          ? Center(child: Text(t('no_chat')))
                           : ListView.builder(
                               itemCount: _sessions.length,
                               itemBuilder: (context, index) {
                                 final session = _sessions[index];
                                 final id = session['id'] as String? ?? '';
-                                final title =
-                                    session['title'] as String? ?? 'Chat';
+                                final rawTitle =
+                                  session['title'] as String? ?? '';
+                                final title = _resolveSessionTitle(rawTitle);
                                 final createdAt =
                                     (session['created_at'] as int?) ?? 0;
                                 final isActive = id == _currentSessionId;
@@ -1828,7 +1856,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   selected: isActive,
                                   trailing: IconButton(
-                                    tooltip: 'Rename',
+                                    tooltip: t('rename'),
                                     icon: const Icon(Icons.edit_outlined),
                                     onPressed: () => _renameSession(id, title),
                                   ),
@@ -1846,14 +1874,14 @@ class _HomePageState extends State<HomePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Menu',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                          Text(
+                            t('menu'),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 6),
                           ListTile(
                             leading: const Icon(Icons.person_outline),
-                            title: const Text('Contact me'),
+                            title: Text(t('contact_me')),
                             onTap: () {
                               Navigator.of(context).pop();
                               Navigator.of(context).push(
@@ -1872,7 +1900,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ListTile(
                             leading: const Icon(Icons.favorite_border),
-                            title: const Text('Support us'),
+                            title: Text(t('support_us')),
                             onTap: () {
                               Navigator.of(context).pop();
                               Navigator.of(context).push(
@@ -1886,7 +1914,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ListTile(
                             leading: const Icon(Icons.settings_outlined),
-                            title: const Text('Settings'),
+                            title: Text(t('settings')),
                             onTap: () async {
                               Navigator.of(context).pop();
                               await Navigator.of(context).push(
@@ -1899,7 +1927,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           ListTile(
                             leading: const Icon(Icons.info_outline),
-                            title: const Text('About'),
+                            title: Text(t('about')),
                             onTap: () {
                               Navigator.of(context).pop();
                               Navigator.of(context).push(
@@ -1923,9 +1951,9 @@ class _HomePageState extends State<HomePage> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFFFBE9E7),
-                    const Color(0xFFE3F2FD),
-                    const Color(0xFFFFF8E1),
+                    primaryColor.withOpacity(0.08),
+                    secondaryColor.withOpacity(0.06),
+                    tertiaryColor.withOpacity(0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -1936,12 +1964,12 @@ class _HomePageState extends State<HomePage> {
           Positioned(
             top: -80,
             right: -40,
-            child: GlowBlob(color: const Color(0xFFF35D9C).withOpacity(0.2)),
+            child: GlowBlob(color: primaryColor.withOpacity(0.2)),
           ),
           Positioned(
             bottom: -120,
             left: -60,
-            child: GlowBlob(color: const Color(0xFFE0BBE4).withOpacity(0.18)),
+            child: GlowBlob(color: secondaryColor.withOpacity(0.18)),
           ),
           SafeArea(
             child: Column(
@@ -1952,10 +1980,10 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Builder(
                         builder: (context) => IconButton(
-                          tooltip: 'History',
+                          tooltip: t('history'),
                           onPressed: () => Scaffold.of(context).openDrawer(),
                           icon: const Icon(Icons.menu_rounded),
-                          color: const Color(0xFFF35D9C),
+                          color: primaryColor,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -1972,10 +2000,10 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 26,
                                 letterSpacing: 0.5,
                                 foreground: Paint()
-                                  ..shader = const LinearGradient(
+                                  ..shader = LinearGradient(
                                     colors: [
-                                      Color(0xFFF35D9C),
-                                      Color(0xFFFFB7C5),
+                                      primaryColor,
+                                      secondaryColor,
                                     ],
                                   ).createShader(
                                     const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0),
@@ -1994,13 +2022,25 @@ class _HomePageState extends State<HomePage> {
                             : 'Profil',
                         child: GestureDetector(
                           onTap: _openProfile,
-                          child: CircleAvatar(
-                            radius: 18,
-                            backgroundColor: const Color(0xFFEFE7E4),
-                            backgroundImage: userAvatarProvider,
-                            child: userAvatarProvider == null
-                                ? const Icon(Icons.person, size: 18)
-                                : null,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryColor.withOpacity(0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 18,
+                              backgroundColor: surfaceColor,
+                              backgroundImage: userAvatarProvider,
+                              child: userAvatarProvider == null
+                                  ? const Icon(Icons.person, size: 18)
+                                  : null,
+                            ),
                           ),
                         ),
                       ),
@@ -2075,13 +2115,13 @@ class _HomePageState extends State<HomePage> {
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFE0BBE4).withOpacity(0.3),
+                                        color: secondaryColor.withOpacity(0.18),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Text(
                                         _formatDateSeparator(message.timestamp),
                                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                          color: const Color(0xFF6B6460),
+                                          color: colorScheme.onSurface.withOpacity(0.65),
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -2104,21 +2144,33 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.85),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: primaryColor.withOpacity(0.12),
                           blurRadius: 16,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: surfaceColor.withOpacity(0.75),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.4),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
                         if (_partialText.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
@@ -2148,24 +2200,24 @@ class _HomePageState extends State<HomePage> {
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 8),
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: surfaceColor.withOpacity(0.8),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
+                                borderSide: BorderSide(color: primaryColor.withOpacity(0.1)),
                               ),
                             ),
-                            items: const [
+                            items: [
                               DropdownMenuItem(
                                 value: 'typecast',
-                                child: Text('Typecast'),
+                                child: Text(t('typecast')),
                               ),
                               DropdownMenuItem(
                                 value: 'system',
-                                child: Text('System TTS'),
+                                child: Text(t('system_tts')),
                               ),
                               DropdownMenuItem(
                                 value: 'voicevox',
-                                child: Text('VoiceVox'),
+                                child: Text(t('voicevox')),
                               ),
                             ],
                             onChanged: (value) async {
@@ -2222,8 +2274,8 @@ class _HomePageState extends State<HomePage> {
                                 minLines: 2,
                                 maxLines: 4,
                                 enabled: !_isThinking,
-                                decoration: const InputDecoration(
-                                  hintText: 'Tulis pertanyaanmu...',
+                                decoration: InputDecoration(
+                                  hintText: t('write_question'),
                                   border: InputBorder.none,
                                 ),
                               ),
@@ -2253,17 +2305,20 @@ class _HomePageState extends State<HomePage> {
                                 child: SendButton(onTap: _sendTypedMessage),
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
+    ],
+  ),
+);
   }
 }

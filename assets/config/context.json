@@ -1,5 +1,5 @@
 {
-  "context_url": "http://localhost:3000/trending?geo=ID&lang=id&limit=20",
+  "context_url": "",
   "context_limit": 8,
   "context_categories": ["social", "news"],
   "use_hyo_response": true,

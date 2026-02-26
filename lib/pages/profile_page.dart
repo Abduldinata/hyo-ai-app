@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../data/memory_store.dart';
+import '../localization/localization_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -101,7 +102,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profil'),
+        title: Text(t('profile')),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -125,8 +126,8 @@ class _ProfilePageState extends State<ProfilePage> {
                     onTap: _pickAvatar,
                     child: Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF35D9C),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -145,14 +146,14 @@ class _ProfilePageState extends State<ProfilePage> {
             TextButton.icon(
               onPressed: _removeAvatar,
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Hapus avatar'),
+              label: Text(t('remove_avatar')),
             ),
           const SizedBox(height: 20),
           TextField(
             controller: _nameController,
             textInputAction: TextInputAction.next,
             decoration: InputDecoration(
-              labelText: 'Nama',
+              labelText: t('name'),
               filled: true,
               fillColor: Colors.white.withOpacity(0.7),
               border: OutlineInputBorder(
@@ -166,7 +167,7 @@ class _ProfilePageState extends State<ProfilePage> {
             controller: _bioController,
             maxLines: 4,
             decoration: InputDecoration(
-              labelText: 'Bio singkat',
+              labelText: t('bio'),
               alignLabelWithHint: true,
               filled: true,
               fillColor: Colors.white.withOpacity(0.7),
@@ -174,7 +175,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
               ),
-              hintText: 'Ceritakan hobi atau hal favorit kamu',
+              hintText: t('bio_hint'),
             ),
           ),
           const SizedBox(height: 24),
@@ -182,7 +183,7 @@ class _ProfilePageState extends State<ProfilePage> {
             onPressed: _isSaving ? null : _saveProfile,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              backgroundColor: const Color(0xFFF35D9C),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -198,14 +199,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('Simpan'),
+                : Text(t('save')),
           ),
           if (kIsWeb)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
               child: Text(
-                'Catatan: Avatar tersimpan di memori browser saat ini.',
-                style: TextStyle(color: Color(0xFF6B6460)),
+                t('avatar_note'),
+                style: const TextStyle(color: Color(0xFF6B6460)),
               ),
             ),
         ],

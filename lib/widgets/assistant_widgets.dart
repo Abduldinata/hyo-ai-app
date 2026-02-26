@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class ExpressionCard extends StatelessWidget {
+class ExpressionCard extends StatefulWidget {
   const ExpressionCard({
     super.key,
     required this.assetPath,
@@ -15,35 +15,132 @@ class ExpressionCard extends StatelessWidget {
   final bool compact;
 
   @override
+  State<ExpressionCard> createState() => _ExpressionCardState();
+}
+
+class _ExpressionCardState extends State<ExpressionCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _floatController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final height = compact ? 180.0 : 230.0;
+    final height = widget.compact ? 180.0 : 230.0;
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    
     return Container(
       height: height,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
+        gradient: LinearGradient(
+          colors: [
+            primaryColor.withOpacity(0.08),
+            secondaryColor.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: primaryColor.withOpacity(0.15),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
         ],
+        border: Border.all(
+          color: primaryColor.withOpacity(0.2),
+          width: 1,
+        ),
       ),
       child: Stack(
         children: [
+          // Floating decorative circles
+          Positioned(
+            top: 12,
+            right: 16,
+            child: AnimatedBuilder(
+              animation: _floatController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, _floatController.value * 8 - 4),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          primaryColor.withOpacity(0.4),
+                          secondaryColor.withOpacity(0.2),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 12,
+            child: AnimatedBuilder(
+              animation: _floatController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, -_floatController.value * 6 + 3),
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: secondaryColor.withOpacity(0.3),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          Positioned(
+            top: 24,
+            left: 20,
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: primaryColor.withOpacity(0.25),
+              ),
+            ),
+          ),
+          // Main avatar
           Center(
             child: AnimatedScale(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutBack,
-              scale: isListening ? 1.06 : 1.0,
+              scale: widget.isListening ? 1.06 : 1.0,
               child: AnimatedSlide(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeOut,
-                offset: isListening ? const Offset(0, -0.03) : Offset.zero,
+                offset: widget.isListening ? const Offset(0, -0.03) : Offset.zero,
                 child: Image.asset(
-                  assetPath,
+                  widget.assetPath,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return Column(
@@ -53,7 +150,7 @@ class ExpressionCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         Text(
                           'Tambahkan asset ekspresi',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          style: theme.textTheme.bodyMedium,
                         ),
                       ],
                     );
@@ -62,7 +159,7 @@ class ExpressionCard extends StatelessWidget {
               ),
             ),
           ),
-          if (isThinking)
+          if (widget.isThinking)
             const Positioned(
               right: 8,
               bottom: 8,
@@ -121,7 +218,7 @@ class _ThinkingIndicatorState extends State<ThinkingIndicator>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFFF35D9C).withOpacity(0.12),
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.12),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -158,6 +255,7 @@ class ChatBubble extends StatelessWidget {
     required this.timestamp,
     this.userAvatar,
     this.assistantAvatarAsset = 'assets/bubble/avatar.jpeg',
+    this.isLoading = false,
   });
 
   final String text;
@@ -165,19 +263,24 @@ class ChatBubble extends StatelessWidget {
   final DateTime timestamp;
   final ImageProvider? userAvatar;
   final String assistantAvatarAsset;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    
     final alignment = fromUser ? Alignment.centerRight : Alignment.centerLeft;
     final maxWidth = MediaQuery.of(context).size.width * 0.68;
     final bubbleColor = fromUser
         ? null
-        : const Color(0xFFFFF5F7);
+        : theme.colorScheme.surface;
     final bubbleGradient = fromUser
-        ? const LinearGradient(
+        ? LinearGradient(
             colors: [
-              Color(0xFFFFB7C5),
-              Color(0xFFF35D9C),
+              primaryColor,
+              secondaryColor,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -185,8 +288,8 @@ class ChatBubble extends StatelessWidget {
         : null;
     final borderColor = fromUser
         ? null
-        : const Color(0xFFE0BBE4).withOpacity(0.4);
-    final textColor = fromUser ? Colors.white : const Color(0xFF4A4A4A);
+        : primaryColor.withOpacity(0.2);
+    final textColor = fromUser ? Colors.white : theme.colorScheme.onSurface;
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(24),
       topRight: const Radius.circular(24),
@@ -220,7 +323,7 @@ class ChatBubble extends StatelessWidget {
               border: borderColor == null ? null : Border.all(color: borderColor),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: primaryColor.withOpacity(0.12),
                   blurRadius: 16,
                   offset: const Offset(0, 8),
                 ),
@@ -229,23 +332,27 @@ class ChatBubble extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  text,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: textColor,
-                        height: 1.45,
-                      ),
-                ),
+                if (isLoading)
+                  const ThinkingChatIndicator()
+                else
+                  Text(
+                    text,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: textColor,
+                          height: 1.45,
+                        ),
+                  ),
                 const SizedBox(height: 4),
-                Text(
-                  _formatTime(timestamp),
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: fromUser
-                            ? Colors.white.withOpacity(0.75)
-                            : const Color(0xFF6B6460).withOpacity(0.75),
-                        fontSize: 10,
-                      ),
-                ),
+                if (!isLoading)
+                  Text(
+                    _formatTime(timestamp),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: fromUser
+                              ? Colors.white.withOpacity(0.75)
+                              : const Color(0xFF6B6460).withOpacity(0.75),
+                          fontSize: 10,
+                        ),
+                  ),
               ],
             ),
           ),
@@ -280,14 +387,14 @@ class ChatBubble extends StatelessWidget {
                 height: 12,
                 decoration: BoxDecoration(
                   color:
-                      fromUser ? const Color(0xFFF35D9C) : const Color(0xFFFFF5F7),
+                      fromUser ? primaryColor : theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(3),
                   border: borderColor == null
                       ? null
                       : Border.all(color: borderColor),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
+                      color: primaryColor.withOpacity(0.08),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
@@ -339,19 +446,80 @@ class ChatBubble extends StatelessWidget {
   }
 }
 
+class ThinkingChatIndicator extends StatefulWidget {
+  const ThinkingChatIndicator({super.key});
+
+  @override
+  State<ThinkingChatIndicator> createState() => _ThinkingChatIndicatorState();
+}
+
+class _ThinkingChatIndicatorState extends State<ThinkingChatIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (index) {
+            final delay = index * 0.2;
+            var value = (_controller.value - delay) % 1.0;
+            if (value < 0) value += 1.0;
+
+            final scale = value < 0.5 ? 1.0 + (value * 2) * 0.4 : 1.4 - ((value - 0.5) * 2) * 0.4;
+            final opacity = value < 0.5 ? 0.4 + (value * 2) * 0.6 : 1.0 - ((value - 0.5) * 2) * 0.6;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2.5, vertical: 6),
+              child: Transform.scale(
+                scale: scale,
+                child: Opacity(
+                  opacity: opacity,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
 class MicButton extends StatefulWidget {
   const MicButton({
     super.key,
     required this.isActive,
     this.onTap,
-    this.onPressStart,
-    this.onPressEnd,
   });
 
   final bool isActive;
   final VoidCallback? onTap;
-  final VoidCallback? onPressStart;
-  final VoidCallback? onPressEnd;
 
   @override
   State<MicButton> createState() => _MicButtonState();
@@ -360,7 +528,6 @@ class MicButton extends StatefulWidget {
 class _MicButtonState extends State<MicButton>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
-  OverlayEntry? _popupOverlay;
   late final AnimationController _pulseController;
 
   @override
@@ -392,123 +559,78 @@ class _MicButtonState extends State<MicButton>
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final baseColor = widget.isActive || _isPressed
-        ? const Color(0xFFF35D9C)
-        : const Color(0xFFFFB7C5);
-    return Listener(
-      onPointerDown: (_) {
-        setState(() => _isPressed = true);
-        _showPopup(context);
-        if (widget.onPressStart != null) widget.onPressStart!();
-      },
-      onPointerUp: (_) {
-        setState(() => _isPressed = false);
-        _removePopup();
-        if (widget.onPressEnd != null) widget.onPressEnd!();
-      },
-      onPointerCancel: (_) {
-        setState(() => _isPressed = false);
-        _removePopup();
-      },
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              if (widget.isActive)
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    final scale = 1.0 + (_pulseController.value * 0.35);
-                    return Transform.scale(
-                      scale: scale,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: baseColor.withOpacity(0.18),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: baseColor,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                  border: _isPressed
-                      ? Border.all(color: Colors.pinkAccent, width: 2)
-                      : null,
-                ),
-                child: Icon(
-                  widget.isActive ? Icons.mic : Icons.mic_none,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void _handleTap() {
+    if (widget.onTap != null) {
+      widget.onTap!();
+    }
   }
 
-  void _showPopup(BuildContext context) {
-    if (_popupOverlay != null) return;
-    final overlay = Overlay.of(context);
-    final renderBox = context.findRenderObject() as RenderBox?;
-    final offset = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
-    _popupOverlay = OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx - 20,
-        top: offset.dy - 60,
-        child: Material(
-          color: Colors.transparent,
-          child: AnimatedOpacity(
-            opacity: _isPressed ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 180),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+    final secondaryColor = theme.colorScheme.secondary;
+    final baseColor = widget.isActive || _isPressed
+        ? primaryColor
+        : secondaryColor;
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        _handleTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: Container(
+        width: 44,
+        height: 44,
+        color: Colors.transparent,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (widget.isActive)
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  final scale = 1.0 + (_pulseController.value * 0.35);
+                  return Transform.scale(
+                    scale: scale,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: baseColor.withOpacity(0.18),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 220),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.85),
-                borderRadius: BorderRadius.circular(16),
+                color: baseColor,
+                shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
+                    color: Colors.black.withOpacity(0.15),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
                 ],
+                border: _isPressed
+                    ? Border.all(color: primaryColor.withOpacity(0.7), width: 2)
+                    : null,
               ),
-              child: const Text(
-                'Tahan untuk merekam',
-                style: TextStyle(color: Colors.white, fontSize: 14),
+              child: Icon(
+                widget.isActive ? Icons.mic : Icons.mic_none,
+                color: Colors.white,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
-    overlay.insert(_popupOverlay!);
-  }
-
-  void _removePopup() {
-    _popupOverlay?.remove();
-    _popupOverlay = null;
   }
 }
 
@@ -597,13 +719,14 @@ class SendButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return PressScale(
       onTap: onTap,
       child: Container(
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: const Color(0xFFFFB7C5),
+          color: primaryColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -665,8 +788,15 @@ class _StatusPillState extends State<StatusPill> with SingleTickerProviderStateM
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFFFFB7C5).withOpacity(0.12),
+          color: Theme.of(context).colorScheme.secondary.withOpacity(0.12),
           borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Text(
           widget.text,

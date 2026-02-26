@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/localization_service.dart';
 
 class SupportPage extends StatelessWidget {
   const SupportPage({super.key, required this.danaNumber});
@@ -7,27 +8,29 @@ class SupportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support us'),
-        foregroundColor: const Color(0xFFF35D9C),
+        title: Text(t('support_us')),
+        foregroundColor: colorScheme.primary,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            'DANA',
+          Text(
+            t('dana'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFF35D9C),
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFB7C5).withOpacity(0.12),
+              color: colorScheme.secondary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: SelectableText(
@@ -40,7 +43,7 @@ class SupportPage extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
@@ -62,11 +65,11 @@ class SupportPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Scan QR untuk donasi DANA',
+                  Text(
+                    t('scan_qr'),
                     style: TextStyle(
                       fontSize: 14,
-                      color: Color(0xFF6B6460),
+                      color: colorScheme.onSurface.withOpacity(0.7),
                     ),
                   ),
                 ],

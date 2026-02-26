@@ -1,59 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../localization/localization_service.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
-
-  static const String _appVersion = '2.2.0+2';
+  static final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About'),
-        foregroundColor: const Color(0xFFF35D9C),
+        title: Text(t('about')),
+        foregroundColor: colorScheme.primary,
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text(
-            'Credits',
+          Text(
+            t('credits'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFF35D9C),
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 12),
-          _linkItem('GitHub Copilot', 'https://github.com/features/copilot'),
-          _linkItem('Google Gemini API', 'https://ai.google.dev'),
-          _linkItem('Typecast TTS', 'https://typecast.ai'),
-          _linkItem('VoiceVox TTS', 'https://voicevox.hiroshiba.jp'),
+          _linkItem(context, 'GitHub Copilot', 'https://github.com/features/copilot'),
+          _linkItem(context, 'Google Gemini API', 'https://ai.google.dev'),
+          _linkItem(context, 'Typecast TTS', 'https://typecast.ai'),
+          _linkItem(context, 'VoiceVox TTS', 'https://voicevox.hiroshiba.jp'),
           const SizedBox(height: 24),
-          const Text(
-            'About this app',
+          Text(
+            t('about_this_app'),
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: Color(0xFFF35D9C),
+              color: colorScheme.primary,
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            'Hyo AI is a personal anime-style assistant with voice, designed to be your friendly companion.',
-            style: TextStyle(height: 1.5),
+          Text(
+            t('about_description'),
+            style: const TextStyle(height: 1.5),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Version $_appVersion',
-            style: const TextStyle(fontWeight: FontWeight.w600),
+          FutureBuilder<PackageInfo>(
+            future: _packageInfo,
+            builder: (context, snapshot) {
+              final info = snapshot.data;
+              final version = info == null ? '-' : '${info.version}+${info.buildNumber}';
+              return Text(
+                '${t('version')} $version',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _linkItem(String label, String url) {
+  Widget _linkItem(BuildContext context, String label, String url) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
@@ -75,18 +86,22 @@ class AboutPage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 4),
           child: Row(
             children: [
-              const Icon(Icons.star_rounded, color: Color(0xFFFFB7C5), size: 18),
+              Icon(Icons.star_rounded, color: colorScheme.secondary, size: 18),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     decoration: TextDecoration.underline,
-                    color: Color(0xFF6B6460),
+                    color: colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ),
-              const Icon(Icons.open_in_new, size: 16, color: Color(0xFF6B6460)),
+              Icon(
+                Icons.open_in_new,
+                size: 16,
+                color: colorScheme.onSurface.withOpacity(0.7),
+              ),
             ],
           ),
         ),

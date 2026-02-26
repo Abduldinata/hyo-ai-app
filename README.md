@@ -35,6 +35,7 @@ Jalankan VoiceVox Engine secara manual dan terpisah dari backend. Tidak ada auto
 - 💬 **Smart Memory**: Remembers preferences and conversation context
 - 🎨 **Anime Style**: Expression changes based on conversation
 - ⏱️ **WhatsApp-style Timestamps**: Date separators and time display
+- ❓ **Settings Help Popups**: Penjelasan per-section lewat ikon info
 
 ### Prerequisites
 - Flutter SDK 3.10.4+
@@ -46,6 +47,8 @@ Jalankan VoiceVox Engine secara manual dan terpisah dari backend. Tidak ada auto
 2. Set `GEMINI_API_KEY` dan `TTS_SERVER_URL` di `.env`
 3. Jalankan VoiceVox Engine (manual atau via script di `scripts/`)
 4. Run app: `flutter run`
+
+**Catatan IP VoiceVox**: Jika IP PC berubah, isi `VoiceVox Server URL` di Settings untuk override nilai `.env` tanpa rebuild APK.
 
 ## Development
 

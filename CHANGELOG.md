@@ -1,5 +1,45 @@
 # Changelog hyo_ai
 
+## v2.3.0 (Theme & UI polish) – 25 Februari 2026
+### Perubahan Utama
+- **Theme System**:
+  - 6 tema siap pakai (Vibrant Kawaii, Soft Candy, Galaxy, Gen-Z, Sunset, Forest)
+  - Gen-Z palette diperbarui (Coral + Teal) agar lebih fresh
+  - Pergantian tema realtime dan konsisten di seluruh UI
+
+- **Home & Chat UI Polish**:
+  - Background home pakai gradient & glow blob yang ikut tema
+  - ExpressionCard sekarang punya gradient + dekorasi floating shapes
+  - Status pill, mic, send button, avatar, dan tanggal separator ikut tema
+
+- **Support / About / Contact Page**:
+  - Warna hardcode dihapus, sekarang theme-aware
+  - About page sudah full localization (judul, section, deskripsi, version)
+
+- **Profile Page**:
+  - Tombol kamera avatar sekarang ikut tema (tidak pink hardcode)
+
+## v2.2.1 (Settings UX & i18n Complete) – 24 Februari 2026
+### Perubahan Utama
+- **Settings UX**: Info bantuan Settings dipindah ke pop-up per section (Language, Auto Translate, TTS, VoiceVox)
+  - Tooltip per section dengan long-press trigger
+  - Teks bantuan Settings sekarang bilingual dan konsisten
+  - Perapihan label dan hint TTS di Settings
+
+- **Localization Coverage Expanded**:
+  - Home screen: Text input hint (`Tulis pertanyaanmu`) → multilingual
+  - Home screen: TTS mode dropdown labels (Typecast, System TTS, VoiceVox) → multilingual
+  - Chat history drawer: Menu items (`chat_history`, `new_chat`, `history`) → multilingual
+  - Chat baru default title: Menggunakan `t('new_chat')` dari localization
+  - Chat history list: Default title lama (`Chat Baru` / `New chat`) dinormalisasi ke bahasa aktif
+
+- **App Version Management**:
+  - About page: Versi app sekarang dinamis dari `PackageInfo` (bukan hardcode)
+  - Automatically reads from `pubspec.yaml` version
+
+- **Dependencies Added**:
+  - `package_info_plus: ^8.1.3` - untuk membaca versi app secara dinamis
+
 ## v2.2.0 (Localization) – 23 Februari 2026
 ### Fitur Localization & Multi-Bahasa
 - **Localization Service**: Singleton service untuk mengelola bahasa aplikasi

@@ -65,6 +65,8 @@ const Map<String, Map<String, String>> translations = {
     'english': 'English',
     'indonesian': 'Bahasa Indonesia',
     'language_selected': 'Bahasa dipilih:',
+    'language_info_title': 'Bahasa',
+    'language_info_body': 'Auto mengikuti bahasa sistem perangkat. Kamu juga bisa paksa English atau Bahasa Indonesia.',
     
     // Settings Page
     'voicevox_server_url': 'VoiceVox Server URL',
@@ -74,6 +76,69 @@ const Map<String, Map<String, String>> translations = {
     'jp': 'Japanese (日本語)',
     'romaji': 'Romaji',
     'original': 'Original',
+    'ok': 'OK',
+    'info': 'Info',
+    'select_mode': 'Pilih mode',
+    'tts_enabled': 'TTS aktif',
+    'tts_disable_hint': 'Matikan jika tidak ingin suara.',
+    'auto_translate_info_title': 'Terjemah Otomatis',
+    'auto_translate_info_body': '📝 Auto Translate: Jawaban Hyo akan diterjemahkan ke bahasa pilihan sebelum disuarakan. Berguna jika Hyo menjawab dalam bahasa lain.',
+    'tts_mode_info_title': 'Penjelasan Mode Text',
+    'tts_mode_info_body': '🇯🇵 Japanese: Teks diterjemahkan ke Bahasa Jepang, lebih natural untuk voice Jepang (butuh internet, lebih lambat)\n\n🔤 Romaji: Teks dikonversi ke huruf Latin (a, e, i, o, u). Eksperimental, kadang tidak akurat.\n\n📝 Original: Gunakan teks asli (Indonesia/English). Cocok untuk testing, tapi mungkin pronunciation kurang natural.',
+    'voicevox_info_title': 'VoiceVox Server',
+    'voicevox_info_body': 'Mode TTS (Typecast/System/VoiceVox) bisa diubah di chat. Jika VoiceVox error/timeout, app otomatis pakai System TTS (Google).\n\nKosongkan field untuk gunakan default dari .env.\n\nIsi URL server VoiceVox di sini jika IP PC berubah. Restart app setelah mengubah.',
+    'tts_section_title': 'Text-to-Speech (TTS)',
+    'tts_section_info_title': 'Text-to-Speech (TTS)',
+    'tts_section_info_body': 'Aktifkan untuk suara. Mode TTS (Typecast/System/VoiceVox) bisa diubah di chat.',
+    'voicevox_server_title': 'VoiceVox Server',
+    'tts_mode_jp_hint': 'Auto Translate ke Jepang',
+    'tts_mode_romaji_hint': 'Konversi ke huruf Latin',
+    'tts_mode_original_hint': 'Tetap original',
+    
+    // Drawer Menu
+    'chat_history': 'Riwayat Chat',
+    'new_chat': 'Chat Baru',
+    'rename': 'Ubah Nama',
+    'menu': 'Menu',
+    'contact_me': 'Hubungi Saya',
+    'support_us': 'Dukung Kami',
+    
+    // Profile Page
+    'name': 'Nama',
+    'bio': 'Bio singkat',
+    'bio_hint': 'Ceritakan hobi atau hal favorit kamu',
+    'remove_avatar': 'Hapus avatar',
+    'avatar_note': 'Catatan: Avatar tersimpan di memori browser saat ini.',
+    
+    // Support Page
+    'dana': 'DANA',
+    'scan_qr': 'Scan QR untuk donasi DANA',
+
+    // About Page
+    'credits': 'Kredit',
+    'about_this_app': 'Tentang aplikasi ini',
+    'about_description': 'Hyo AI adalah asisten personal bergaya anime dengan suara, dirancang untuk menjadi teman ramahmu.',
+    'version': 'Versi',
+    
+    // Theme
+    'theme': 'Tema',
+    'select_theme': 'Pilih Tema',
+    'vibrant_kawaii': 'Vibrant Kawaii',
+    'soft_candy': 'Soft Candy',
+    'galaxy': 'Galaxy',
+    'gen_z': 'Gen-Z',
+    'sunset': 'Sunset',
+    'forest': 'Forest',
+    'theme_info_title': 'Tema',
+    'theme_info_body': 'Pilih tema warna favorit kamu. Tema akan berubah langsung ketika dipilih dan tersimpan otomatis.',
+    
+    // Contact Page
+    'created_by': 'Dibuat oleh: Abdul Aziz Dinata',
+    'cannot_open_link': 'Tidak bisa membuka link.',
+    'instagram': 'Instagram',
+    'tiktok': 'TikTok',
+    'email': 'Email',
+    'github': 'GitHub',
   },
   'en': {
     // Main Chat Screen
@@ -141,6 +206,8 @@ const Map<String, Map<String, String>> translations = {
     'english': 'English',
     'indonesian': 'Bahasa Indonesia',
     'language_selected': 'Language selected:',
+    'language_info_title': 'Language',
+    'language_info_body': 'Auto follows your device language. You can also force English or Indonesian.',
     
     // Settings Page
     'voicevox_server_url': 'VoiceVox Server URL',
@@ -150,5 +217,68 @@ const Map<String, Map<String, String>> translations = {
     'jp': 'Japanese (日本語)',
     'romaji': 'Romaji',
     'original': 'Original',
+    'ok': 'OK',
+    'info': 'Info',
+    'select_mode': 'Select mode',
+    'tts_enabled': 'TTS enabled',
+    'tts_disable_hint': 'Turn off if you do not want audio.',
+    'auto_translate_info_title': 'Auto Translate',
+    'auto_translate_info_body': '📝 Auto Translate: Hyo\'s answer will be translated to the selected language before being spoken. Useful if Hyo answers in another language.',
+    'tts_mode_info_title': 'Text Mode Explanation',
+    'tts_mode_info_body': '🇯🇵 Japanese: Text is translated to Japanese, more natural for Japanese voice (needs internet, slower).\n\n🔤 Romaji: Text is converted to Latin letters (a, e, i, o, u). Experimental, sometimes inaccurate.\n\n📝 Original: Use the original text (Indonesian/English). Good for testing, but pronunciation may be less natural.',
+    'voicevox_info_title': 'VoiceVox Server',
+    'voicevox_info_body': 'TTS mode (Typecast/System/VoiceVox) can be changed in chat. If VoiceVox errors/timeouts, the app automatically uses System TTS (Google).\n\nLeave the field empty to use the default from .env.\n\nEnter the VoiceVox server URL here if the PC IP changes. Restart the app after changing.',
+    'tts_section_title': 'Text-to-Speech (TTS)',
+    'tts_section_info_title': 'Text-to-Speech (TTS)',
+    'tts_section_info_body': 'Enable to hear audio. TTS mode (Typecast/System/VoiceVox) can be changed in chat.',
+    'voicevox_server_title': 'VoiceVox Server',
+    'tts_mode_jp_hint': 'Auto translate to Japanese',
+    'tts_mode_romaji_hint': 'Convert to Latin letters',
+    'tts_mode_original_hint': 'Keep original',
+    
+    // Drawer Menu
+    'chat_history': 'Chat History',
+    'new_chat': 'New chat',
+    'rename': 'Rename',
+    'menu': 'Menu',
+    'contact_me': 'Contact me',
+    'support_us': 'Support us',
+    
+    // Profile Page
+    'name': 'Name',
+    'bio': 'Short bio',
+    'bio_hint': 'Tell us about your hobbies or favorite things',
+    'remove_avatar': 'Remove avatar',
+    'avatar_note': 'Note: Avatar is saved in current browser memory.',
+    
+    // Support Page
+    'dana': 'DANA',
+    'scan_qr': 'Scan QR to donate via DANA',
+
+    // About Page
+    'credits': 'Credits',
+    'about_this_app': 'About this app',
+    'about_description': 'Hyo AI is a personal anime-style assistant with voice, designed to be your friendly companion.',
+    'version': 'Version',
+    
+    // Theme
+    'theme': 'Theme',
+    'select_theme': 'Select Theme',
+    'vibrant_kawaii': 'Vibrant Kawaii',
+    'soft_candy': 'Soft Candy',
+    'galaxy': 'Galaxy',
+    'gen_z': 'Gen-Z',
+    'sunset': 'Sunset',
+    'forest': 'Forest',
+    'theme_info_title': 'Theme',
+    'theme_info_body': 'Choose your favorite color theme. The theme changes instantly when selected and is automatically saved.',
+    
+    // Contact Page
+    'created_by': 'Created by: Abdul Aziz Dinata',
+    'cannot_open_link': 'Cannot open link.',
+    'instagram': 'Instagram',
+    'tiktok': 'TikTok',
+    'email': 'Email',
+    'github': 'GitHub',
   },
 };

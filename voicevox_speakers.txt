@@ -1,0 +1,235 @@
+﻿VoiceVox Character IDs Reference
+==================================================
+
+CARA PAKAI:
+1. Pilih ID character yang kamu mau dari list di bawah
+2. Buka file .env
+3. Ubah VOICEVOX_SPEAKER_ID=10 dengan ID yang kamu pilih
+4. Restart app Flutter
+
+CURRENTLY USING: ID 10 - Meinaru Himari (冥鳴ひまり)
+
+==================================================
+POPULAR FEMALE VOICES (RECOMMENDED)
+==================================================
+
+ID 0   - 四国めたん (Shikoku Metan) - かわいい
+         Suara: Imut, cute, kawaii
+
+ID 8   - 春日部つむぎ (Kasukabe Tsumugi) - ノーマル
+         Suara: Natural, normal
+
+ID 10  - 冥鳴ひまり (Meinaru Himari) - ノーマル ★ CURRENT
+         Suara: Lembut dan hangat (柔らかく温かい声)
+
+ID 14  - 玄野武宏 (Kurono Takehiro) - ノーマル
+         Suara: Natural female voice
+
+ID 20  - もち子さん (Mochiko-san) - ノーマル
+         Suara: Mature, gentle
+
+==================================================
+ALL CHARACTER IDS (117+ voices)
+==================================================
+
+四国めたん (Shikoku Metan):
+  ID: 0   - かわいい (Kawaii)
+  ID: 2   - ノーマル (Normal)
+  ID: 4   - セクシー (Sexy)
+  ID: 6   - ツンツン (Tsundere)
+  ID: 36  - あまあま (Sweet)
+  ID: 37  - ボソボソ (Whisper)
+
+ずんだもん (Zundamon):
+  ID: 1   - あまあま (Sweet)
+  ID: 3   - ノーマル (Normal)
+  ID: 5   - セクシー (Sexy)
+  ID: 7   - ツンツン (Tsundere)
+  ID: 22  - ささやき (Whisper)
+  ID: 38  - ヒソヒソ (Quiet)
+  ID: 75  - ヘロヘロ (Weak)
+  ID: 76  - なみだめ (Tearful)
+
+春日部つむぎ (Kasukabe Tsumugi):
+  ID: 8   - ノーマル (Normal)
+
+冥鳴ひまり (Meinaru Himari): ★柔らかく温かい声
+  ID: 10  - ノーマル (Normal)
+
+波音リツ (Namine Ritsu):
+  ID: 9   - ノーマル (Normal)
+  ID: 65  - クイーン (Queen)
+
+玄野武宏 (Kurono Takehiro):
+  ID: 11  - ノーマル (Normal)
+  ID: 39  - 喜び (Joy)
+  ID: 40  - ツンギレ (Angry)
+  ID: 41  - 悲しみ (Sad)
+
+白上虎太郎 (Shirakami Kotaro):
+  ID: 12  - ふつう (Normal)
+  ID: 32  - わーい (Happy)
+  ID: 33  - びくびく (Scared)
+  ID: 34  - おこ (Angry)
+  ID: 35  - びえーん (Crying)
+
+青山龍星 (Aoyama Ryusei):
+  ID: 13  - ノーマル (Normal)
+  ID: 81  - 熱血 (Passionate)
+  ID: 82  - 不機嫌 (Grumpy)
+  ID: 83  - 喜び (Joy)
+  ID: 84  - しっとり (Calm)
+  ID: 85  - かなしみ (Sad)
+  ID: 86  - 囁き (Whisper)
+
+九州そら (Kyushu Sora):
+  ID: 15  - あまあま (Sweet)
+  ID: 16  - ノーマル (Normal)
+  ID: 17  - セクシー (Sexy)
+  ID: 18  - ツンツン (Tsundere)
+  ID: 19  - ささやき (Whisper)
+
+もち子さん (Mochiko-san):
+  ID: 20  - ノーマル (Normal)
+  ID: 66  - セクシー (Sexy)
+  ID: 77  - 泣き (Crying)
+  ID: 78  - 怒り (Angry)
+  ID: 79  - 喜び (Joy)
+  ID: 80  - のんびり (Relaxed)
+
+剣崎雌雄 (Kenzaki Mesuo):
+  ID: 21  - ノーマル (Normal)
+
+WhiteCUL:
+  ID: 23  - ノーマル (Normal)
+  ID: 24  - たのしい (Happy)
+  ID: 25  - かなしい (Sad)
+  ID: 26  - びえーん (Crying)
+
+後鬼 (Goki):
+  ID: 27  - 人間ver. (Human)
+  ID: 28  - ぬいぐるみver. (Plushie)
+  ID: 87  - 人間（怒り）ver. (Human Angry)
+  ID: 88  - 鬼ver. (Demon)
+
+No.7:
+  ID: 29  - ノーマル (Normal)
+  ID: 30  - アナウンス (Announcement)
+  ID: 31  - 読み聞かせ (Reading)
+
+ちび式じい (Chibishiki Jii):
+  ID: 42  - ノーマル (Normal)
+
+櫻歌ミコ (Ouka Miko):
+  ID: 43  - ノーマル (Normal)
+  ID: 44  - 第二形態 (Form 2)
+  ID: 45  - ロリ (Loli)
+
+小夜/SAYO:
+  ID: 46  - ノーマル (Normal)
+
+ナースロボ＿タイプＴ (Nurse Robo Type T):
+  ID: 47  - ノーマル (Normal)
+  ID: 48  - 楽々 (Easy)
+  ID: 49  - 恐怖 (Fear)
+  ID: 50  - 内緒話 (Secret)
+
+†聖騎士 紅桜† (Seikishi Benizakura):
+  ID: 51  - ノーマル (Normal)
+
+雨晴はう (Amehare Hau):
+  ID: 52  - ノーマル (Normal)
+
+麒ヶ島宗麟 (Kikajima Sourin):
+  ID: 53  - ノーマル (Normal)
+
+春歌ナナ (Haruka Nana):
+  ID: 54  - ノーマル (Normal)
+
+猫使アル (Nekotsuka Aru):
+  ID: 55  - ノーマル (Normal)
+  ID: 56  - おちつき (Calm)
+  ID: 57  - うきうき (Excited)
+  ID: 110 - イライラ (Irritated)
+  ID: 111 - じーじ (Geezer)
+
+猫使ビィ (Nekotsuka Bii):
+  ID: 58  - ノーマル (Normal)
+  ID: 59  - おちつき (Calm)
+  ID: 60  - 人見知り (Shy)
+  ID: 112 - イライラ (Irritated)
+
+中国うさぎ (Chugoku Usagi):
+  ID: 61  - ノーマル (Normal)
+  ID: 62  - おどろき (Surprised)
+  ID: 63  - こわがり (Scared)
+  ID: 64  - へろへろ (Tired)
+
+栗田まろん (Kurita Maron):
+  ID: 67  - ノーマル (Normal)
+
+あいえるたん:
+  ID: 68  - ノーマル (Normal)
+
+満別花丸 (Manbetsu Hanamaru):
+  ID: 69  - ノーマル (Normal)
+  ID: 70  - 元気 (Energetic)
+  ID: 71  - ささやき (Whisper)
+  ID: 72  - ぶりっ子 (Cute Act)
+  ID: 73  - ボーイ (Boyish)
+
+琴詠ニア (Kotoei Nia):
+  ID: 74  - ノーマル (Normal)
+
+Voidoll:
+  ID: 89  - ノーマル (Normal)
+
+ずぼずぼ子 (Zubozubo-ko):
+  ID: 90  - ノーマル (Normal)
+  ID: 91  - 低血圧 (Low BP)
+  ID: 92  - 覚醒 (Awakened)
+  ID: 93  - 宗教風 (Religious)
+
+中部つぐみ (Chubu Tsugumi):
+  ID: 94  - ノーマル (Normal)
+  ID: 95  - 怒り (Angry)
+  ID: 96  - ボソボソ (Mumbling)
+  ID: 97  - ドラドラ (Dramatic)
+  ID: 98  - 絶望と希望 (Despair & Hope)
+
+闇音レンリ (Yamine Renri):
+  ID: 99  - ノーマル (Normal)
+  ID: 101 - シリアス (Serious)
+
+黒沢崎白 (Kurosawazaki Shiro):
+  ID: 100 - ノーマル (Normal)
+
+ウーレイちゃん (Urei-chan):
+  ID: 102 - ノーマル (Normal)
+  ID: 103 - 照れ (Shy)
+  ID: 104 - 励まし (Encouraging)
+  ID: 105 - ほろ酔い (Tipsy)
+  ID: 106 - ゆくあに (Relaxed)
+
+東北きりたん (Tohoku Kiritan):
+  ID: 107 - ノーマル (Normal)
+
+東北イタコ (Tohoku Itako):
+  ID: 108 - ノーマル (Normal)
+
+琴詠ニア (Kotoei Nia):
+  ID: 109 - ノーマル (Normal)
+
+ききぷり (Kikipuri):
+  ID: 113 - ノーマル (Normal)
+  ID: 114 - イライラ (Irritated)
+  ID: 115 - ボソボソ (Mumbling)
+  ID: 116 - ふわふわ (Fluffy)
+  ID: 117 - あっさり (Light)
+
+==================================================
+NOTES:
+- Total 117+ voice variations available
+- Check http://192.168.1.2:50021/docs for live API
+- Restart Flutter app after changing speaker ID
+==================================================

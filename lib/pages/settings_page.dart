@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/memory_store.dart';
 import '../localization/localization_service.dart';
 import '../localization/localization_service.dart' show t;
+import '../services/theme_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -13,6 +14,7 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final MemoryStore _memoryStore = MemoryStore.instance;
+  late ThemeService _themeService;
   bool _autoTranslateEnabled = false;
   String _autoTranslateTarget = 'id';
   bool _ttsEnabled = true;
@@ -24,6 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
+    _themeService = ThemeService();
     _loadSettings();
   }
 
@@ -56,6 +59,25 @@ class _SettingsPageState extends State<SettingsPage> {
     await _memoryStore.upsertPreference(key, value);
   }
 
+  Future<void> _showInfoDialog({
+    required String title,
+    required String message,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(t('ok')),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,60 +89,168 @@ class _SettingsPageState extends State<SettingsPage> {
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                // Language Settings
-                Text(
-                  t('language'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  t('language_selected'),
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-                const SizedBox(height: 12),
-                // Auto
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(t('auto')),
-                  value: 'auto',
-                  groupValue: _appLanguage,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    setState(() => _appLanguage = value);
-                    await LocalizationService.instance.setLanguage(value);
-                  },
-                ),
-                // English
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(t('english')),
-                  value: 'en',
-                  groupValue: _appLanguage,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    setState(() => _appLanguage = value);
-                    await LocalizationService.instance.setLanguage(value);
-                  },
-                ),
-                // Indonesian
-                RadioListTile<String>(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(t('indonesian')),
-                  value: 'id',
-                  groupValue: _appLanguage,
-                  onChanged: (value) async {
-                    if (value == null) return;
-                    setState(() => _appLanguage = value);
-                    await LocalizationService.instance.setLanguage(value);
-                  },
+                // Theme & Language Settings (2-Column Layout)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Theme Section
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  t('theme'),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              Tooltip(
+                                message: t('info'),
+                                triggerMode: TooltipTriggerMode.longPress,
+                                child: IconButton(
+                                  iconSize: 20,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  icon: const Icon(Icons.help_outline),
+                                  onPressed: () {
+                                    _showInfoDialog(
+                                      title: t('theme_info_title'),
+                                      message: t('theme_info_body'),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<AppThemeMode>(
+                            value: _themeService.currentTheme,
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            items: AppThemeMode.values
+                                .map((mode) {
+                                  final themeName = ThemeService.getTheme(mode).name;
+                                  return DropdownMenuItem<AppThemeMode>(
+                                    value: mode,
+                                    child: Text(themeName),
+                                  );
+                                })
+                                .toList(),
+                            onChanged: (AppThemeMode? newValue) async {
+                              if (newValue != null) {
+                                await _themeService.setTheme(newValue);
+                                // Rebuild app theme
+                                if (mounted) {
+                                  setState(() {});
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Language Section
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  t('language'),
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              Tooltip(
+                                message: t('info'),
+                                triggerMode: TooltipTriggerMode.longPress,
+                                child: IconButton(
+                                  iconSize: 20,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  icon: const Icon(Icons.help_outline),
+                                  onPressed: () {
+                                    _showInfoDialog(
+                                      title: t('language_info_title'),
+                                      message: t('language_info_body'),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _appLanguage,
+                            decoration: InputDecoration(
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            items: [
+                              DropdownMenuItem(
+                                value: 'auto',
+                                child: Text(t('auto')),
+                              ),
+                              DropdownMenuItem(
+                                value: 'en',
+                                child: Text(t('english')),
+                              ),
+                              DropdownMenuItem(
+                                value: 'id',
+                                child: Text(t('indonesian')),
+                              ),
+                            ],
+                            onChanged: (String? value) async {
+                              if (value == null) return;
+                              setState(() => _appLanguage = value);
+                              await LocalizationService.instance.setLanguage(value);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
                 const Divider(height: 1),
                 const SizedBox(height: 24),
                 // Auto Translate
-                Text(
-                  t('auto_translate'),
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        t('auto_translate'),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Tooltip(
+                      message: t('info'),
+                      triggerMode: TooltipTriggerMode.longPress,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline),
+                        onPressed: () {
+                          _showInfoDialog(
+                            title: t('auto_translate_info_title'),
+                            message: t('auto_translate_info_body'),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 SwitchListTile.adaptive(
@@ -175,31 +305,36 @@ class _SettingsPageState extends State<SettingsPage> {
                       await _updatePreference('auto_translate_target', value);
                     },
                   ),
-                if (_autoTranslateEnabled)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Text(
-                        '📝 Auto Translate: Jawaban Hyo akan diterjemahkan ke bahasa pilihan sebelum disuarakan. Berguna jika Hyo menjawab dalam bahasa lain.',
-                        style: TextStyle(fontSize: 13, color: Color(0xFF6B6460)),
+                if (_autoTranslateEnabled) const SizedBox(height: 8),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        t('tts_section_title'),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                       ),
                     ),
-                  ),
-                const SizedBox(height: 24),
-                Text(
-                  'Text-to-Speech (TTS)',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    Tooltip(
+                      message: t('info'),
+                      triggerMode: TooltipTriggerMode.longPress,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline),
+                        onPressed: () {
+                          _showInfoDialog(
+                            title: t('tts_section_info_title'),
+                            message: t('tts_section_info_body'),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 SwitchListTile.adaptive(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('TTS aktif'),
-                  subtitle: const Text('Matikan jika tidak ingin suara.'),
+                  title: Text(t('tts_enabled')),
+                  subtitle: Text(t('tts_disable_hint')),
                   value: _ttsEnabled,
                   onChanged: (value) async {
                     setState(() {
@@ -212,15 +347,38 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  t('tts_text_mode'),
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF6B6460)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        t('tts_text_mode'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF6B6460),
+                        ),
+                      ),
+                    ),
+                    Tooltip(
+                      message: t('info'),
+                      triggerMode: TooltipTriggerMode.longPress,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline),
+                        onPressed: () {
+                          _showInfoDialog(
+                            title: t('tts_mode_info_title'),
+                            message: t('tts_mode_info_body'),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _ttsTextMode,
                   decoration: InputDecoration(
-                    labelText: 'Pilih mode',
+                    labelText: t('select_mode'),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
@@ -235,15 +393,15 @@ class _SettingsPageState extends State<SettingsPage> {
                   items: [
                     DropdownMenuItem(
                       value: 'jp',
-                      child: Text('🇯🇵 ${t('jp')} (Auto Translate ke Jepang)'),
+                      child: Text('🇯🇵 ${t('jp')} (${t('tts_mode_jp_hint')})'),
                     ),
                     DropdownMenuItem(
                       value: 'romaji',
-                      child: Text('🔤 ${t('romaji')} (Konversi ke huruf Latin)'),
+                      child: Text('🔤 ${t('romaji')} (${t('tts_mode_romaji_hint')})'),
                     ),
                     DropdownMenuItem(
                       value: 'original',
-                      child: Text('📝 ${t('original')} (Tetap original)'),
+                      child: Text('📝 ${t('original')} (${t('tts_mode_original_hint')})'),
                     ),
                   ],
                   onChanged: (value) async {
@@ -257,36 +415,28 @@ class _SettingsPageState extends State<SettingsPage> {
                   },
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        '📖 Penjelasan Mode Text:',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B6460)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        t('voicevox_server_title'),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                       ),
-                      SizedBox(height: 6),
-                      Text(
-                        '🇯🇵 Japanese: Teks diterjemahkan ke Bahasa Jepang, lebih natural untuk voice Jepang (butuh internet, lebih lambat)\n\n🔤 Romaji: Teks dikonversi ke huruf Latin (a, e, i, o, u). Eksperimental, kadang tidak akurat.\n\n📝 Original: Gunakan teks asli (Indonesia/English). Cocok untuk testing, tapi mungkin pronunciation kurang natural.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF6B6460), height: 1.5),
+                    ),
+                    Tooltip(
+                      message: t('info'),
+                      triggerMode: TooltipTriggerMode.longPress,
+                      child: IconButton(
+                        icon: const Icon(Icons.help_outline),
+                        onPressed: () {
+                          _showInfoDialog(
+                            title: t('voicevox_info_title'),
+                            message: t('voicevox_info_body'),
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  '💡 Catatan: Mode TTS (Typecast/System/VoiceVox) bisa diubah di chat. Jika VoiceVox error/timeout, app otomatis pakai System TTS (Google).',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF6B6460), fontStyle: FontStyle.italic),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'VoiceVox Server',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -294,7 +444,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   decoration: InputDecoration(
                     labelText: t('voicevox_server_url'),
                     hintText: 'http://192.168.1.2:50021',
-                    helperText: 'Kosongkan untuk gunakan default dari .env',
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
@@ -309,11 +458,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   onChanged: (value) async {
                     await _updatePreference('voicevox_server_url', value.trim());
                   },
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Isi URL server VoiceVox di sini jika IP PC berubah. Restart app setelah mengubah.',
-                  style: TextStyle(color: Color(0xFF6B6460)),
                 ),
               ],
             ),
