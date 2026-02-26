@@ -1,5 +1,19 @@
 # Exclude private QR code
 assets/support/qr.png
+
+# Platform folders (Flutter generated - should not be committed)
+android/
+ios/
+windows/
+linux/
+macos/
+web/
+test/
+
+# Flutter metadata
+.metadata
+pubspec.lock
+
 # Miscellaneous
 *.class
 *.log
